@@ -1,0 +1,118 @@
+{% extends 'recommendations/base.html' %}
+
+{% block title %}
+Про фільм
+{% endblock %}
+
+{% block content %}
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ movie.title }}</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        .rating {
+            display: flex;
+            gap: 5px;
+        }
+        .star {
+            font-size: 2rem;
+            color: #ccc;
+            transition: color 0.3s;
+            cursor: pointer;
+        }
+        .star.selected,
+        .star.hovered {
+            color: #ffd700;
+        }
+    </style>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const stars = document.querySelectorAll('.star');
+            const form = document.querySelector('#rating-form');
+            const currentRatingText = document.querySelector('#current-rating');
+
+            stars.forEach((star, index) => {
+                star.addEventListener('click', () => {
+                    stars.forEach(s => s.classList.remove('selected'));
+                    for (let i = 0; i <= index; i++) {
+                        stars[i].classList.add('selected');
+                    }
+                });
+                star.addEventListener('mouseover', () => {
+                    for (let i = 0; i <= index; i++) {
+                        stars[i].classList.add('hovered');
+                    }
+                });
+                star.addEventListener('mouseout', () => {
+                    stars.forEach(s => s.classList.remove('hovered'));
+                });
+            });
+
+            // Обробка надсилання форми
+            form.addEventListener('submit', (e) => {
+                e.preventDefault();
+                
+                const selectedRating = form.querySelector('input[name="rating"]:checked').value;
+
+                fetch(form.action, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: new URLSearchParams({ rating: selectedRating })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        currentRatingText.innerText = `Ваш рейтинг: ${data.new_rating} з 5`;
+                    }
+                })
+                .catch(error => console.error('Помилка:', error));
+            });
+        });
+    </script>
+</head>
+<body>
+    <div class="container mt-4">
+        <h1>{{ movie.title }}</h1>
+        {% if movie.image %}
+            <img src="{{ movie.image.url }}" alt="{{ movie.title }}" class="img-fluid">
+        {% endif %}
+        <p><strong>Жанри:</strong> {{ movie.genres }}</p>
+        <p><strong>Опис:</strong> {{ movie.overview }}</p>
+        <p><strong>Дата виходу:</strong> {{ movie.release_date }}</p>
+
+        {% if user.is_authenticated %}
+            <h3>Ваш рейтинг:</h3>
+            <p id="current-rating">
+                {% if current_rating %}
+                    Ваш рейтинг: {{ current_rating }} з 5
+                {% else %}
+                    Ви ще не оцінили цей фільм.
+                {% endif %}
+            </p>
+
+            <form id="rating-form" action="{% url 'movie_detail' movie.id %}" method="post">
+                {% csrf_token %}
+                <h3>Додати рейтинг:</h3>
+                <div class="rating ml-3">
+                    {% for i in star_range %}
+                        <label class="star {% if current_rating and current_rating >= i %}selected{% endif %}">
+                            <input type="radio" name="rating" value="{{ i }}" style="display: none;" {% if current_rating == i %}checked{% endif %}> ★
+                        </label>
+                    {% endfor %}
+                </div>
+                <button type="submit" class="btn btn-primary mt-3">Надіслати рейтинг</button>
+            </form>
+        {% else %}
+            <p><a href="{% url 'loginform' %}">Увійдіть</a> щоб залишити рейтинг.</p>
+        {% endif %}
+    </div>
+</body>
+</html>
+
+{% endblock %}

@@ -1,0 +1,26 @@
+{%extends 'recommendations/base.html'%}
+
+
+{% block title %}
+Авторизація
+{% endblock %}
+
+
+{% block content %}
+<form action="" method="post">
+{% csrf_token %}
+    <div class="container col-md-4" >
+    <h1 class="h3 mb-3 fw-normal">Авторизація</h1>
+    <div class="form-floating ">
+      <input type="text" class="form-control" name="username">
+      <label for="floatingInput">Ім'я</label>
+    </div><br>
+    <div class="form-floating">
+      <input type="password" class="form-control" name="password">
+      <label for="floatingPassword">Пароль</label>
+    </div>
+    <p></p>
+    <button class="btn btn-primary w-100 py-2" type="submit">Увійти</button>
+    </div>
+  </form>
+{% endblock %}

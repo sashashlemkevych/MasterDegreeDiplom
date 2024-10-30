@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>{% block title %} {% endblock %} </title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css">
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.12.9/dist/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+</head>
+<body style="background-color: rgb(238, 255, 255)">
+<div>
+    <div>
+    <header class="d-flex flex-wrap align-items-center justify-content-center justify-content-md-between py-3 mb-4 border-bottom" style="background-color: #263757">
+    <p class="text-start text-white fs-3 w-25 align-center mb-0" style="margin-left: 20px;"><a href="{% url 'home' %}" class="nav-link px-2 link-secondary text-white">MovieRecommendtaion</a></p>
+        {% if user.is_authenticated %}
+            <div class="col-md-2 text-end w-25 pe-5" >
+                <div class="dropdown">
+  <button class="btn btn-primary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+    Користувач: {{ user }}
+  </button>
+  <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+    <a class="dropdown-item" href="{% url 'logout' %}">Вийти</a>
+  </div>
+</div>
+
+        {% else %}
+                 <ul class="nav container col-md-4">
+                     </ul>
+            <a href="{% url 'loginform' %}" type="button" class="btn btn-primary me-2">Вхід</a>
+            <a href="{% url 'registerform' %}" type="button" class="btn btn-primary me-5">Реєстрація</a>
+            </div>
+        {% endif %}
+          </a>
+    </header>
+  </div>
+    </header>
+  </div>
+    <main>
+        <div class="container">
+        <div class="pt-4 my-md-5 pt-md-10 border-top"></div>
+        </div>
+    </main>
+ <div class="container px-3">
+    {% block content %}{% endblock %}
+     </div>
+<div class="container">
+    <footer class="pt-4 my-md-5 pt-md-5 border-top">
+        <div class="row">
+          <div class="col-12 col-md">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-film" viewBox="0 0 16 16">
+                  <path d="M0 1a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H1a1 1 0 0 1-1-1zm4 0v6h8V1zm8 8H4v6h8zM1 1v2h2V1zm2 3H1v2h2zM1 7v2h2V7zm2 3H1v2h2zm-2 3v2h2v-2zM15 1h-2v2h2zm-2 3v2h2V4zm2 3h-2v2h2zm-2 3v2h2v-2zm2 3h-2v2h2z"/>
+                </svg>
+            <small class="d-block mb-3 text-body-secondary">© 2024</small>
+          </div>
+      </footer>
+</div>
+</body>
+</html>
