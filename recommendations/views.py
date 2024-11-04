@@ -13,36 +13,47 @@ from django.http import JsonResponse # type: ignore
 from django.views.decorators.csrf import csrf_exempt # type: ignore
 import json
 from django.contrib.auth.decorators import login_required # type: ignore
+from django.db.models import Avg
+from .recommendations import get_hybrid_recommendations  # Імпортуємо вашу функцію
 
+def home(request):
+    if request.user.is_authenticated:
+        # Якщо користувач авторизований, отримуємо рекомендації
+        recommendations = get_hybrid_recommendations(request.user.id)
+        movies = Movie.objects.all()  # Отримуємо всі фільми
+    else:
+        # Якщо користувач не авторизований, показуємо топові фільми
+        top_movies = Rating.objects.values('movie').annotate(avg_rating=Avg('rating')).order_by('-avg_rating')[:10]
+        # Отримуємо фільми за їх ID
+        movies = Movie.objects.filter(id__in=[item['movie'] for item in top_movies])
 
-# # Завантаження гібридної моделі
-# hybrid_model = joblib.load(r'D:\Diplom\MovieHybridRecommendSystem\hybrid_model.pkl')
+    for movie in movies:
+        if request.user.is_authenticated:
+            # Знайти рейтинг поточного користувача для кожного фільму
+            user_rating = Rating.objects.filter(user=request.user, movie=movie).first()
+            movie.user_rating = user_rating.rating if user_rating else 0  # Якщо рейтинг відсутній, встановити 0
+        else:
+            movie.user_rating = 0  # Для анонімного користувача встановити рейтинг 0 або None
+        # Створити список зірок: заповнені (True) або порожні (False)
+        movie.stars = [True if i < movie.user_rating else False for i in range(5)]
+
+    return render(request, 'recommendations/home.html', {
+        'movies': movies,
+        'recommendations': recommendations if request.user.is_authenticated else None,  # Передаємо рекомендації, якщо авторизовані
+    })
 
 # def home(request):
-#     if request.user.is_authenticated:
-#         # Рекомендації для авторизованого користувача
-#         user_id = request.user.id
-#         recommendations = get_recommendations(user_id)
-#     else:
-#         # Топ фільми для нових користувачів
-#         recommendations = Movie.objects.order_by('-release_date')[:10]
-#     return render(request, 'recommendations/home.html', {'recommendations': recommendations})
-
-# def get_recommendations(user_id):
-#     # Логіка для отримання рекомендацій з гібридної моделі
-#     recommended_movie_ids = []  # Використати гібридну модель для отримання рекомендацій
-#     recommendations = Movie.objects.filter(id__in=recommended_movie_ids)
-#     return recommendations
-
-# def register(request):
-#     if request.method == 'POST':
-#         form = UserRegistrationForm(request.POST)
-#         if form.is_valid():
-#             form.save()
-#             return redirect('login')
-#     else:
-#         form = UserRegistrationForm()
-#     return render(request, 'recommendations/register.html', {'form': form})
+#     movies = Movie.objects.all()
+#     for movie in movies:
+#         if request.user.is_authenticated:
+#             # Знайти рейтинг поточного користувача для кожного фільму
+#             user_rating = Rating.objects.filter(user=request.user, movie=movie).first()
+#             movie.user_rating = user_rating.rating if user_rating else 0  # Якщо рейтинг відсутній, встановити 0
+#         else:
+#             movie.user_rating = 0  # Для анонімного користувача встановити рейтинг 0 або None
+#         # Створити список зірок: заповнені (True) або порожні (False)
+#         movie.stars = [True if i < movie.user_rating else False for i in range(5)]
+#     return render(request, 'recommendations/home.html', {'movies': movies})
 
 
 def movie_detail(request, movie_id):
@@ -73,20 +84,6 @@ def movie_detail(request, movie_id):
         'star_range': star_range
     })
 
-
-
-def home(request):
-    movies = Movie.objects.all()
-    for movie in movies:
-        if request.user.is_authenticated:
-            # Знайти рейтинг поточного користувача для кожного фільму
-            user_rating = Rating.objects.filter(user=request.user, movie=movie).first()
-            movie.user_rating = user_rating.rating if user_rating else 0  # Якщо рейтинг відсутній, встановити 0
-        else:
-            movie.user_rating = 0  # Для анонімного користувача встановити рейтинг 0 або None
-        # Створити список зірок: заповнені (True) або порожні (False)
-        movie.stars = [True if i < movie.user_rating else False for i in range(5)]
-    return render(request, 'recommendations/home.html', {'movies': movies})
 
 
 def loginform(request):

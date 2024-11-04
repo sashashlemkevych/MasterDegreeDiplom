@@ -1,15 +1,74 @@
-<!-- recommendations/templates/recommendations/home.html -->
 
-{%extends 'recommendations/base.html'%}
 
-{%block title %}
+ <!-- recommendations/templates/recommendations/home.html -->
+
+{% extends 'recommendations/base.html' %}
+
+{% block title %}
 Головна
 {% endblock %}
 
-{%block content %}
+{% block content %}
+<div class="dropdown">
+    <button type="button" class="btn btn-info dropdown-toggle" id="dropdownMenuButton" aria-haspopup="true" data-toggle="dropdown" aria-expanded="false" >
+      Фільтри
+    </button>
+    <ul class="dropdown-menu " aria-labelledby="dropdownMenuButton">
+      <li style="margin-left: 10px;">Сортувати:</li>
+      <li><hr class="dropdown-divider"></li>
+      <div class="form-check" style="margin-left: 10px; margin-right: 10px;">
+        <input class="form-check-input" type="radio" name="flexRadioDefault" id="flexRadioDefault1" checked>
+        <label class="form-check-label" for="flexRadioDefault1">
+          По замовчуванню
+        </label>
+      </div>
+      <div class="form-check" style="margin-left: 10px;">
+        <input class="form-check-input" type="radio" name="flexRadioDefault" id="flexRadioDefault2">
+        <label class="form-check-label" for="flexRadioDefault2">
+          Від А-Я
+        </label>
+      </div>
+      <div class="form-check" style="margin-left: 10px;">
+        <input class="form-check-input" type="radio" name="flexRadioDefault" id="flexRadioDefault2">
+        <label class="form-check-label" for="flexRadioDefault2">
+          Від Я-А
+        </label>
+      </div>
+      <button type="button" class="btn btn-info" style="margin-left: 10px; margin-top: 10px;" >Прийняти</button>
+    </ul>
+  </div>
 
-
-<div class="container mt-4">
+<div class="container mt-4 pt-4 my-md-5 pt-md-10 border-top">
+    <h2>Рекомендовані фільми</h2>
+    <div class="row row-cols-1 row-cols-md-3 mb-3 text-center">
+        {% if recommendations %}
+            {% for movie in recommendations %}
+            <div class="col-auto d-none d-lg-block">
+                <img src="{{ movie.image.url }}" alt="{{ movie.title }}" class="card-img-top" style="width: 350px; height: 500px;">
+                <div class="py-2" style="font-size: 24px;">
+                    <a href="{% url 'movie_detail' movie.id %}" class="text-decoration-none text-dark">{{ movie.title }}</a>
+                </div>
+                <div class="py-2" style="margin-bottom: 10px;">
+                    <span class="rating">
+                        {% for star in movie.stars %}
+                            {% if star %}
+                                <span style="color: gold; font-size: 30px;">★</span>
+                            {% else %}
+                                <span style="color: lightgray; font-size: 30px;">☆</span>
+                            {% endif %}
+                        {% endfor %}
+                    </span>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <p>Немає доступних рекомендацій.</p>
+        {% endif %}
+    </div>
+    <div class="container">
+        <div class="pt-4 my-md-2 pt-md-10 border-top"></div>
+        </div>
+    <h2>Всі фільми</h2>
     <div class="row row-cols-1 row-cols-md-3 mb-3 text-center">
         {% for movie in movies %}
         <div class="col-auto d-none d-lg-block">
@@ -21,7 +80,7 @@
                 <span class="rating">
                     {% for star in movie.stars %}
                         {% if star %}
-                            <span style="color: gold; font-size: 30px;" >★</span>
+                            <span style="color: gold; font-size: 30px;">★</span>
                         {% else %}
                             <span style="color: lightgray; font-size: 30px;">☆</span>
                         {% endif %}
@@ -32,9 +91,4 @@
         {% endfor %}
     </div>
 </div>
-
-
 {% endblock %}
-
-
-
