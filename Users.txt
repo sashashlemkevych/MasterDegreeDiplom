@@ -1,0 +1,24 @@
+Login       Password
+
+admin       admin
+
+user1       sasha12345
+
+user2       sasha12345
+
+user3       sasha12345
+
+user4       sasha12345
+
+user5       sasha12345
+
+user6       sasha12345
+
+user7       sasha12345
+
+user8       sasha12345
+
+user9       sasha12345
+
+user10       sasha12345
+
