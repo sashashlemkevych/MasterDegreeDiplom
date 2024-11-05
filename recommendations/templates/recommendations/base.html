@@ -25,8 +25,8 @@
               <li class="nav-item">
               </li>
             </ul>
-            <form class="d-flex" role="search">
-              <input class="form-control me-2" type="search" placeholder="Поле пошуку" aria-label="Search">
+            <form class="d-flex" role="search" action="{% url 'search' %}" method="get">
+              <input class="form-control me-2" type="search" name="q" placeholder="Поле пошуку" aria-label="Search">
               <button class="btn btn-info" type="submit">Пошук</button>
             </form>
           </div>
