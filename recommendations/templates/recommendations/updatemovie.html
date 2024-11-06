@@ -1,0 +1,21 @@
+{% extends 'recommendations/base.html' %}
+
+
+{% block title %}
+Оновити фільм
+{% endblock %}
+
+
+{% block content %}
+    <h4>Оновити дані</h4>
+    <form method="post" enctype="multipart/form-data">
+         {% csrf_token %}
+        {{ form.title }}<br>
+        {{ form.genres }}<br>
+        {{ form.overview }}<br>
+        {{ form.release_date }}<br>
+        {{ form.image }}<br>
+        <button type="submit" class="btn btn-success">Оновити</button>
+        <span>{{ error }}</span>
+    </form>
+{% endblock %}

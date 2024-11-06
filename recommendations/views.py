@@ -16,6 +16,7 @@ from django.contrib.auth.decorators import login_required # type: ignore
 from django.db.models import Avg
 from django.db.models import Q
 from django.db.models.functions import Lower
+from .forms import AddMovieForm
 
 from .recommendations import get_hybrid_recommendations  # Імпортуємо вашу функцію
 
@@ -38,10 +39,12 @@ def home(request):
         # If the user is authenticated, get recommendations
         recommendations = get_hybrid_recommendations(request.user.id)
         movies = Movie.objects.all()  # Retrieve all movies
+        movies = Movie.objects.order_by('-id')
     else:
         # If the user is not authenticated, show top-rated movies
         top_movies = Rating.objects.values('movie').annotate(avg_rating=Avg('rating')).order_by('-avg_rating')[:10]
         movies = Movie.objects.filter(id__in=[item['movie'] for item in top_movies])
+        
 
     for movie in movies:
         if request.user.is_authenticated:
@@ -125,6 +128,35 @@ def movie_detail(request, movie_id):
         'star_range': star_range
     })
 
+
+def addmovie(request):
+    error = ''
+    if request.method == 'POST':
+        form  = AddMovieForm(request.POST, request.FILES)
+        if form.is_valid():
+            form.save()
+            return redirect('home')
+        else:
+            error = "Дані не правильного формату"
+    form = AddMovieForm()
+    context = {
+
+        'form': form, 
+        'error': error
+
+    }
+    return render(request, 'recommendations/addmovie.html', context)
+
+
+# def updatemovie(request, id):
+
+#     return redirect('home')
+
+# def deletemovie(request, id):
+#     movies = Movie.objects.get(pk=id)
+#     movies.delete()
+#     return redirect('home')
+   
 
 
 def loginform(request):

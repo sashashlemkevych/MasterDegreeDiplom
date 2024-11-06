@@ -1,0 +1,25 @@
+{% extends 'recommendations/base.html' %}
+
+{% block title %}
+Додати фільми
+{% endblock %}
+
+
+{% block content %}
+    <h4>Новий фільм</h4>
+    <form method="post" enctype="multipart/form-data">
+         {% csrf_token %}
+        <label>Назва фільму</label>
+        {{form.title}}<br>
+        <label>Жанри</label>
+        {{form.genres}}<br>
+        <label>Опис фільму</label>
+        {{form.overview}}<br>
+        <label>Дата релізу</label>
+        {{form.release_date}}<br>
+        <label>Постер</label>
+        {{form.image}}<br>
+        <button type="submit" class="btn btn-success">Додати</button>
+        <span>{{ error }}</span>
+    </form>
+{% endblock %}
