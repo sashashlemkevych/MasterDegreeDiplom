@@ -36,24 +36,24 @@ def home(request):
         search_results = Movie.objects.filter(search_query)
     
     if request.user.is_authenticated:
-        # If the user is authenticated, get recommendations
+        # Якщо користувач авторизований, отримуємо рекомендації
         recommendations = get_hybrid_recommendations(request.user.id)
-        movies = Movie.objects.all()  # Retrieve all movies
+        movies = Movie.objects.all()  # Отримуємо всі фільми
         movies = Movie.objects.order_by('-id')
     else:
-        # If the user is not authenticated, show top-rated movies
+        # Якщо користувач не авторизований, показуємо топові фільми
         top_movies = Rating.objects.values('movie').annotate(avg_rating=Avg('rating')).order_by('-avg_rating')[:10]
         movies = Movie.objects.filter(id__in=[item['movie'] for item in top_movies])
         
 
     for movie in movies:
         if request.user.is_authenticated:
-            # Get the current user's rating for each movie
+            # Знайти рейтинг поточного користувача для кожного фільму
             user_rating = Rating.objects.filter(user=request.user, movie=movie).first()
             movie.user_rating = user_rating.rating if user_rating else 0  # Set to 0 if no rating
         else:
-            movie.user_rating = 0  # Set rating to 0 for anonymous users
-        # Create a list of stars: filled (True) or empty (False)
+            movie.user_rating = 0  # Для анонімного користувача встановити рейтинг 0 або None
+        # Створити список зірок: заповнені (True) або порожні (False)
         movie.stars = [True if i < movie.user_rating else False for i in range(5)]
 
         # Get sorting option from query parameters
@@ -69,7 +69,6 @@ def home(request):
         'search_results': search_results,
         'query': query,
     }
-   # print(movies.values_list('title', flat=True))
     return render(request, 'recommendations/home.html', context)
 
 
@@ -148,16 +147,27 @@ def addmovie(request):
     return render(request, 'recommendations/addmovie.html', context)
 
 
-# def updatemovie(request, id):
+def updatemovie(request, movie_id):
+    movie = get_object_or_404(Movie, id=movie_id)
+    if request.method == "POST":
+        form = AddMovieForm(request.POST, request.FILES, instance=movie)
+        if form.is_valid():
+            form.save()
+            return redirect('movie_detail', movie_id=movie.id)
+    else:
+        form = AddMovieForm(instance=movie)
+    
+    context = {
+        'form': form,
+        'movie': movie,
+    }
+    return render(request, 'recommendations/updatemovie.html', context)
 
-#     return redirect('home')
-
-# def deletemovie(request, id):
-#     movies = Movie.objects.get(pk=id)
-#     movies.delete()
-#     return redirect('home')
+def deletemovie(request, movie_id):
+    movies = Movie.objects.get(pk=movie_id)
+    movies.delete()
+    return redirect('home')
    
-
 
 def loginform(request):
     error_message=''
