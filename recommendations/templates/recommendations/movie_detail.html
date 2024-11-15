@@ -86,7 +86,7 @@
         <p><strong>Опис:</strong> {{ movie.overview }}</p>
         <p><strong>Дата виходу:</strong> {{ movie.release_date }}</p>
 
-        {% if user.is_authenticated and user.is_staff %}
+        {% if user.is_authenticated %}
             <h3>Ваш рейтинг:</h3>
             <p id="current-rating">
                 {% if current_rating %}
@@ -108,9 +108,10 @@
                 </div>
                 <button type="submit" class="btn btn-primary mt-3">Надіслати рейтинг</button>
             </form>
+            {% if user.is_staff %}
             <a class="btn btn-success mt-3" href="{% url 'updatemovie' movie.id %}">Редагувати фільм</a>
             <a class="btn btn-danger mt-3" href="{% url 'deletemovie' movie.id %}">Видалити фільм</a>
-        
+            {% endif %}
         {% else %}
             <p><a href="{% url 'loginform' %}">Увійдіть</a> щоб залишити рейтинг.</p>
             

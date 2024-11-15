@@ -3,7 +3,7 @@
 import pandas as pd
 from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.feature_extraction.text import CountVectorizer
-from django.db.models import Avg
+from django.db.models import Avg, Count
 from .models import Movie, Rating
 
 def get_hybrid_recommendations(user_id, top_n=10):
@@ -62,3 +62,14 @@ def compute_collaborative_similarity(user_movie_df):
     # Обчислюємо косинусну схожість для колаборативної фільтрації
     user_similarity = cosine_similarity(user_movie_df)
     return pd.DataFrame(user_similarity, index=user_movie_df.index, columns=user_movie_df.index)
+
+
+
+def get_popular_movies(top_n=9):
+    # Отримуємо топ фільмів за середнім рейтингом і кількістю оцінок
+    popular_movies = (
+        Movie.objects.annotate(avg_rating=Avg('rating__rating'), num_ratings=Count('rating'))
+        .filter(num_ratings__gt=5)  # Фільтруємо фільми з малою кількістю оцінок
+        .order_by('-avg_rating', '-num_ratings')[:top_n]
+    )
+    return popular_movies

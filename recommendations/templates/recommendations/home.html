@@ -1,5 +1,3 @@
-
-
  <!-- recommendations/templates/recommendations/home.html -->
 
 {% extends 'recommendations/base.html' %}
@@ -18,21 +16,24 @@
             <li style="margin-left: 10px;">Сортувати:</li>
             <li><hr class="dropdown-divider"></li>
             <div class="form-check" style="margin-left: 10px; margin-right: 10px;">
-                <input class="form-check-input" type="radio" name="sort" value="default" id="flexRadioDefault1" checked>
+                <input class="form-check-input" type="radio" name="sort" value="default" id="flexRadioDefault1" {% if sort_option == 'default' %}checked{% endif %}>
                 <label class="form-check-label" for="flexRadioDefault1">По замовчуванню</label>
             </div>
             <div class="form-check" style="margin-left: 10px;">
-                <input class="form-check-input" type="radio" name="sort" value="az" id="flexRadioDefault2">
+                <input class="form-check-input" type="radio" name="sort" value="az" id="flexRadioDefault2" {% if sort_option == 'az' %}checked{% endif %}>
                 <label class="form-check-label" for="flexRadioDefault2">Від А-Я</label>
             </div>
             <div class="form-check" style="margin-left: 10px;">
-                <input class="form-check-input" type="radio" name="sort" value="za" id="flexRadioDefault3">
+                <input class="form-check-input" type="radio" name="sort" value="za" id="flexRadioDefault3" {% if sort_option == 'za' %}checked{% endif %}>
                 <label class="form-check-label" for="flexRadioDefault3">Від Я-А</label>
             </div>
+
+            
             <button type="submit" class="btn btn-info" style="margin-left: 10px; margin-top: 10px;">Прийняти</button>
         </ul>
     </form>
 </div>
+
 <div class="container mt-4 pt-4 my-md-5 pt-md-10 border-top">
     {% if query %}
     <h2>Результати пошуку для "{{ query }}"</h2>
@@ -62,6 +63,74 @@
         {% endif %}
     </div>
 {% endif %}
+
+{% if user.is_authenticated %}
+    <h2>Всі фільми</h2>
+    <div class="row row-cols-1 row-cols-md-3 mb-3 text-center">
+        {% for movie in page_obj.object_list %}
+        <div class="col-auto d-none d-lg-block">
+            <img src="{{ movie.image.url }}" alt="{{ movie.title }}" class="card-img-top" style="width: 350px; height: 500px;">
+            <div class="py-2" style="font-size: 24px;">
+                <a href="{% url 'movie_detail' movie.id %}" class="text-decoration-none text-dark">{{ movie.title }}</a>
+            </div>
+            <div class="py-2" style="margin-bottom: 10px;">
+                <span class="rating">
+                    {% for star in movie.stars %}
+                        {% if star %}
+                            <span style="color: gold; font-size: 30px;">★</span>
+                        {% else %}
+                            <span style="color: lightgray; font-size: 30px;">☆</span>
+                        {% endif %}
+                    {% endfor %}
+                </span>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+{% else %}
+<h2>Топові фільми</h2>
+    <div class="row row-cols-1 row-cols-md-3 mb-3 text-center">
+        {% for movie in page_obj.object_list %}
+        <div class="col-auto d-none d-lg-block">
+            <img src="{{ movie.image.url }}" alt="{{ movie.title }}" class="card-img-top" style="width: 350px; height: 500px;">
+            <div class="py-2" style="font-size: 24px;">
+                <a href="{% url 'movie_detail' movie.id %}" class="text-decoration-none text-dark">{{ movie.title }}</a>
+            </div>
+            <div class="py-2" style="margin-bottom: 10px;">
+                <span class="rating">
+                    {% for star in movie.stars %}
+                        {% if star %}
+                            <span style="color: gold; font-size: 30px;">★</span>
+                        {% else %}
+                            <span style="color: lightgray; font-size: 30px;">☆</span>
+                        {% endif %}
+                    {% endfor %}
+                </span>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    <div class="pagination">
+        <span class="step-links">
+            {% if page_obj.has_previous %}
+                <a href="?page=1{% if query %}&q={{ query }}{% endif %}{% if sort_option %}&sort={{ sort_option }}{% endif %}">Перша сторінка</a>
+                <a href="?page={{ page_obj.previous_page_number }}{% if query %}&q={{ query }}{% endif %}{% if sort_option %}&sort={{ sort_option }}{% endif %}">Попередня сторінка</a>
+            {% endif %}
+        
+            <span>Сторінка: {{ page_obj.number }} з {{ page_obj.paginator.num_pages }}</span>
+        
+            {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}{% if query %}&q={{ query }}{% endif %}{% if sort_option %}&sort={{ sort_option }}{% endif %}">Наступна сторінка</a>
+                <a href="?page={{ page_obj.paginator.num_pages }}{% if query %}&q={{ query }}{% endif %}{% if sort_option %}&sort={{ sort_option }}{% endif %}">Остання сторінка</a>
+            {% endif %}
+        </span>
+    </div>
+    
+    <div class="container">
+        <div class="pt-4 my-md-2 pt-md-10 border-top"></div>
+        </div>
+    {%if user.is_authenticated%}
     <h2>Рекомендовані фільми</h2>
     <div class="row row-cols-1 row-cols-md-3 mb-3 text-center">
         {% if recommendations %}
@@ -88,30 +157,7 @@
             <p>Немає доступних рекомендацій.</p>
         {% endif %}
     </div>
-    <div class="container">
-        <div class="pt-4 my-md-2 pt-md-10 border-top"></div>
-        </div>
-    <h2>Всі фільми</h2>
-    <div class="row row-cols-1 row-cols-md-3 mb-3 text-center">
-        {% for movie in movies %}
-        <div class="col-auto d-none d-lg-block">
-            <img src="{{ movie.image.url }}" alt="{{ movie.title }}" class="card-img-top" style="width: 350px; height: 500px;">
-            <div class="py-2" style="font-size: 24px;">
-                <a href="{% url 'movie_detail' movie.id %}" class="text-decoration-none text-dark">{{ movie.title }}</a>
-            </div>
-            <div class="py-2" style="margin-bottom: 10px;">
-                <span class="rating">
-                    {% for star in movie.stars %}
-                        {% if star %}
-                            <span style="color: gold; font-size: 30px;">★</span>
-                        {% else %}
-                            <span style="color: lightgray; font-size: 30px;">☆</span>
-                        {% endif %}
-                    {% endfor %}
-                </span>
-            </div>
-        </div>
-        {% endfor %}
-    </div>
+
+        {% endif %}
 </div>
 {% endblock %}
