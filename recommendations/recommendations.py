@@ -6,7 +6,7 @@ from sklearn.feature_extraction.text import CountVectorizer
 from django.db.models import Avg, Count
 from .models import Movie, Rating
 
-def get_hybrid_recommendations(user_id, top_n=10):
+def get_hybrid_recommendations(user_id, top_n=27):
     # Завантаження даних з бази даних
     user_movie_matrix = Rating.objects.values('user', 'movie', 'rating')
     user_movie_df = pd.DataFrame(user_movie_matrix)

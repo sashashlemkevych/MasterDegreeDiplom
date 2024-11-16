@@ -27,8 +27,25 @@
                 <input class="form-check-input" type="radio" name="sort" value="za" id="flexRadioDefault3" {% if sort_option == 'za' %}checked{% endif %}>
                 <label class="form-check-label" for="flexRadioDefault3">Від Я-А</label>
             </div>
+            {% if user.is_authenticated %}
+            <div class="form-check" style="margin-left: 10px;">
+                <input class="form-check-input" type="radio" name="sort" value="rating_desc" id="flexRadioRatingDesc" {% if sort_option == 'rating_desc' %}checked{% endif %}>
+                <label class="form-check-label" for="flexRadioRatingDesc">За рейтингом: від найвищого</label>
+            </div>
+            <div class="form-check" style="margin-left: 10px; margin-right: 10px;">
+                <input class="form-check-input" type="radio" name="sort" value="rating_asc" id="flexRadioRatingAsc" {% if sort_option == 'rating_asc' %}checked{% endif %}>
+                <label class="form-check-label" for="flexRadioRatingAsc">За рейтингом: від найнижчого</label>
+            </div>
+            {% endif %}
+            <div class="form-check" style="margin-left: 10px;">
+                <input class="form-check-input" type="radio" name="sort" value="average_rating_desc" id="flexRadioAvgRatingDesc" {% if sort_option == 'average_rating_desc' %}checked{% endif %}>
+                <label class="form-check-label" for="flexRadioAvgRatingDesc">За середнім рейтингом: від найвищого</label>
+            </div>
+            <div class="form-check" style="margin-left: 10px; margin-right: 10px;">
+                <input class="form-check-input" type="radio" name="sort" value="average_rating_asc" id="flexRadioAvgRatingAsc" {% if sort_option == 'average_rating_asc' %}checked{% endif %}>
+                <label class="form-check-label" for="flexRadioAvgRatingAsc">За середнім рейтингом: від найнижчого</label>
+            </div>
 
-            
             <button type="submit" class="btn btn-info" style="margin-left: 10px; margin-top: 10px;">Прийняти</button>
         </ul>
     </form>

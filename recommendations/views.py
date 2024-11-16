@@ -15,7 +15,7 @@ import json
 from django.contrib.auth.decorators import login_required # type: ignore
 from django.db.models import Avg, F
 from django.db.models import Q
-from django.db.models import F, Case, When, Value, IntegerField
+from django.db.models import OuterRef, Subquery, F
 from django.db.models.functions import Lower
 from .forms import AddMovieForm
 from django.core.paginator import Paginator
@@ -60,17 +60,31 @@ def home(request):
         top_movies = Rating.objects.values('movie') \
         .annotate(avg_rating=Avg('rating')) \
         .filter(avg_rating__gte=3, avg_rating__lte=5) \
-        .order_by('-avg_rating')[:9]
+        .order_by('-avg_rating')[:27]
 
         movies = Movie.objects.filter(id__in=[item['movie'] for item in top_movies])
         
-            
-        # Get sorting option from query parameters
-        
+
+
+    movies = movies.annotate(average_rating=Avg('rating__rating'))
+        # Створюємо підзапит для вибору рейтингу поточного користувача
+    if current_user.is_authenticated:    
+        user_ratings = Rating.objects.filter(user=current_user, movie=OuterRef('pk')).values('rating')[:1]
+        movies = movies.annotate(user_rating=Subquery(user_ratings))    
+    #     # Get sorting option from query parameters
     if sort_option == 'az':
         movies = movies.order_by('title')  # Sort A-Z
     elif sort_option == 'za':
         movies = movies.order_by('-title')  # Sort Z-A
+    elif sort_option == 'rating_asc' and current_user.is_authenticated:
+        movies = movies.order_by(F('user_rating').asc(nulls_last=True))  # За рейтингом зростання
+    elif sort_option == 'rating_desc' and current_user.is_authenticated:
+        movies = movies.order_by(F('user_rating').desc(nulls_last=True))  # За рейтингом спадання
+    elif sort_option == 'average_rating_asc':
+        movies = movies.order_by('average_rating')  # Сортувати за середнім рейтингом по зростанню
+    elif sort_option == 'average_rating_desc':
+        movies = movies.order_by('-average_rating')  # Сортувати за середнім рейтингом по спаданням
+    
 
     
 
@@ -111,6 +125,10 @@ def movie_detail(request, movie_id):
     if request.user.is_authenticated:
         user_rating = Rating.objects.filter(user=request.user, movie=movie).first()
         current_rating = user_rating.rating if user_rating else None
+    
+    # Обчислення середнього рейтингу
+    average_rating = Rating.objects.filter(movie=movie).aggregate(Avg('rating'))['rating__avg']
+    average_rating = round(average_rating, 1) if average_rating else "Немає рейтингу"
 
     if request.method == 'POST' and request.headers.get('X-Requested-With') == 'XMLHttpRequest':
         if request.user.is_authenticated:
@@ -128,6 +146,7 @@ def movie_detail(request, movie_id):
     return render(request, 'recommendations/movie_detail.html', {
         'movie': movie,
         'current_rating': current_rating,
+        'average_rating': average_rating,
         'star_range': star_range
     })
 

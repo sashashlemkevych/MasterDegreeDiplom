@@ -86,6 +86,8 @@
         <p><strong>Опис:</strong> {{ movie.overview }}</p>
         <p><strong>Дата виходу:</strong> {{ movie.release_date }}</p>
 
+        <p><strong>Середній рейтинг:</strong> {{ average_rating }}</p>
+
         {% if user.is_authenticated %}
             <h3>Ваш рейтинг:</h3>
             <p id="current-rating">
