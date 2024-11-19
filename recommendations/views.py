@@ -1,3 +1,4 @@
+from pyexpat.errors import messages
 from django.shortcuts import render, redirect, get_object_or_404 # type: ignore
 from django.contrib.auth import login, authenticate, logout # type: ignore
 from django.contrib.auth.hashers import make_password # type: ignore
@@ -6,7 +7,7 @@ from django.contrib.auth.hashers import make_password # type: ignore
 # recommendations/views.py
 
 
-from .models import Movie, Rating
+from .models import Movie, Rating, Review
 from .forms import RegisterForm
 import joblib
 from django.http import JsonResponse # type: ignore
@@ -20,6 +21,7 @@ from django.db.models.functions import Lower
 from .forms import AddMovieForm
 from django.core.paginator import Paginator
 from django.shortcuts import render
+from django.http import HttpResponseForbidden
 
 from .recommendations import get_hybrid_recommendations, get_popular_movies # Імпортуємо вашу функцію
 
@@ -117,6 +119,11 @@ def home(request):
     return render(request, 'recommendations/home.html', context)
 
 
+from django.db.models import Avg
+from django.http import JsonResponse
+from django.shortcuts import render, get_object_or_404
+from .models import Movie, Rating, Review
+
 def movie_detail(request, movie_id):
     movie = get_object_or_404(Movie, id=movie_id)
     
@@ -126,19 +133,57 @@ def movie_detail(request, movie_id):
         user_rating = Rating.objects.filter(user=request.user, movie=movie).first()
         current_rating = user_rating.rating if user_rating else None
     
-    # Обчислення середнього рейтингу
+    # Обчислення середнього рейтингу, перевірка на наявність рейтингів
     average_rating = Rating.objects.filter(movie=movie).aggregate(Avg('rating'))['rating__avg']
     average_rating = round(average_rating, 1) if average_rating else "Немає рейтингу"
 
-    if request.method == 'POST' and request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-        if request.user.is_authenticated:
-            rating = request.POST.get('rating')
-            if rating:
-                # Оновити або створити рейтинг
-                Rating.objects.update_or_create(user=request.user, movie=movie, defaults={'rating': rating})
-                return JsonResponse({'success': True, 'new_rating': rating})
-        else:
-            return JsonResponse({'success': False, 'message': 'Треба увійти, щоб залишити рейтинг'}, status=401)
+    # Завантаження існуючих відгуків для цього фільму з відповідними рейтингами
+    reviews = Review.objects.filter(movie=movie).order_by('-created_at')
+    reviews_with_ratings = []
+    for review in reviews:
+        user_rating = Rating.objects.filter(user=review.user, movie=movie).first()
+        reviews_with_ratings.append({
+            'user': review.user,
+            'content': review.content,
+            'created_at': review.created_at,
+            'id': review.id,
+            'user_rating': user_rating.rating if user_rating else None
+        })
+    
+    if request.method == 'POST':
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':  # Для рейтингу
+            if request.user.is_authenticated:
+                rating = request.POST.get('rating')
+                if rating:
+                    # Оновити або створити рейтинг
+                    Rating.objects.update_or_create(user=request.user, movie=movie, defaults={'rating': rating})
+                    return JsonResponse({'success': True, 'new_rating': rating})
+            else:
+                return JsonResponse({'success': False, 'message': 'Треба увійти, щоб залишити рейтинг'}, status=401)
+        # else:  # Для відгуків
+        #     if request.user.is_authenticated:
+        #         review_content = request.POST.get('review_content')
+        #         if review_content:
+        #             Review.objects.create(user=request.user, movie=movie, content=review_content)
+        #             return JsonResponse({'success': True})
+        #     else:
+        #         return JsonResponse({'success': False, 'message': 'Треба увійти, щоб залишити відгук'}, status=401)
+    if request.method == 'POST':
+            if request.user.is_authenticated:
+                review_content = request.POST.get('review_content')
+                if review_content:
+                    # Create new review
+                    review = Review.objects.create(user=request.user, movie=movie, content=review_content)
+                    # Prepare response data
+                    response_data = {
+                        'success': True,
+                        'username': review.user.username,
+                        'created_at': review.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+                        'review': review.content,
+                    }
+                    return JsonResponse(response_data)
+            else:
+                return JsonResponse({'success': False, 'message': 'Треба увійти, щоб залишити відгук'}, status=401)
 
     # Додаємо список з 1 до 5 для зірочок
     star_range = range(1, 6)
@@ -147,8 +192,31 @@ def movie_detail(request, movie_id):
         'movie': movie,
         'current_rating': current_rating,
         'average_rating': average_rating,
-        'star_range': star_range
+        'star_range': star_range,
+        'reviews': reviews_with_ratings,  # Передаємо відгуки разом із рейтингами
     })
+
+
+
+
+# @user_passes_test(lambda u: u.is_staff)
+def delete_review(request, review_id):
+    review = get_object_or_404(Review, id=review_id)
+    review.delete()
+    return redirect('movie_detail', movie_id=review.movie.id)
+
+# def delete_review(request, review_id):
+#     review = get_object_or_404(Review, id=review_id)
+
+#     # Дозволити видаляти тільки автору відгуку або адміністратору
+#     if request.user == review.user or request.user.is_staff:
+#         review.delete()
+#         messages.success(request, 'Відгук успішно видалено.')
+#     else:
+#         return HttpResponseForbidden('Ви не маєте права видаляти цей відгук.')
+
+#     return redirect('movie_detail', movie_id=review.movie.id)
+
 
 
 def addmovie(request):

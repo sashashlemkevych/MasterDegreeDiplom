@@ -116,9 +116,121 @@
             {% endif %}
         {% else %}
             <p><a href="{% url 'loginform' %}">Увійдіть</a> щоб залишити рейтинг.</p>
-            
         {% endif %}
         
+        <hr>
+
+        <!-- Відображення відгуків -->
+        <div class="container mt-4">
+            <h3>Відгуки:</h3>
+            {% for review in reviews %}
+                <div class="review-box d-flex justify-content-between align-items-center">
+                    <div>
+                        <strong>{{ review.user.username }}</strong>
+                        {% if review.user_rating %}
+                            <p class="text-muted" style="font-size: 0.9em;">Рейтинг фільму від користувача: {{ review.user_rating }} з 5</p>
+                        {% endif %}
+                        {{ review.content }}
+                        <p class="text-muted" style="font-size: 0.9em;">{{ review.created_at|date:"d M Y, H:i" }}</p>
+                    </div>
+                    {% if user.is_authenticated and user.is_staff %}
+                        <form action="{% url 'delete_review' review.id %}" method="post" onsubmit="return confirm('Ви впевнені, що хочете видалити цей відгук?');">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-danger btn-sm">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash" viewBox="0 0 16 16">
+                                    <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z"></path>
+                                    <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4zM2.5 3h11V2h-11z"></path>
+                                </svg>
+                            </button>
+                        </form>
+                    {% endif %}
+                </div>
+            {% empty %}
+                <p>Відгуків ще немає. Будьте першим!</p>
+            {% endfor %}
+        </div>
+        
+        <style>
+            .review-box {
+                border: 1px solid #ddd;
+                border-radius: 10px;
+                padding: 15px;
+                margin-bottom: 15px;
+                background-color: #f9f9f9;
+                box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+            
+            .review-box strong {
+                font-size: 1.1em;
+            }
+            
+            .review-box button {
+                margin-left: 15px;
+            }
+        </style>
+        
+
+        <!-- Форма додавання відгуку -->
+        {% if user.is_authenticated %}
+        <h3 class="mt-4">Додати відгук:</h3>
+        <form id="review-form" action="{% url 'movie_detail' movie.id %}" method="post" onsubmit="submitReview(event)">
+            {% csrf_token %}
+            <div class="form-group">
+                <textarea name="review_content" class="form-control" rows="4" placeholder="Напишіть ваш відгук..."></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary">Надіслати відгук</button>
+        </form>
+        {% else %}
+        <p><a href="{% url 'loginform' %}">Увійдіть</a>, щоб залишити відгук.</p>
+        {% endif %}
+
+        <script>
+            function submitReview(event) {
+                event.preventDefault();
+                let form = document.getElementById('review-form');
+                let formData = new FormData(form);
+        
+                fetch("{% url 'movie_detail' movie.id %}", {
+                    method: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRFToken': formData.get('csrfmiddlewaretoken'),
+                    },
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Додавання відгуку до списку
+                        let reviewsContainer = document.querySelector('.container.mt-4');
+                        let newReview = `
+                            <div class="review-box d-flex justify-content-between align-items-center">
+                                <div>
+                                    <strong>${data.username}</strong>
+                                    <p class="text-muted" style="font-size: 0.9em;">${data.created_at}</p>
+                                    ${data.review}
+                                </div>
+                            </div>
+                        `;
+                        reviewsContainer.insertAdjacentHTML('afterbegin', newReview);
+                        form.reset();  // Очищаємо форму
+        
+                        // Перезавантажити сторінку для оновлення всіх відгуків
+                        window.location.reload();  // Перезавантажує сторінку після успішного додавання відгуку
+                    } else {
+                        alert(data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+            }
+        </script>
+        
+
     </div>
 </body>
 </html>
