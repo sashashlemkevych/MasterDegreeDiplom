@@ -41,8 +41,10 @@
   <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
             {% if user.is_staff %}
            <a class="dropdown-item" href="{% url 'addmovie' %}"> Додати фільм</a>
-    <li><hr class="dropdown-divider"></li>
             {% endif %}
+            <a class="dropdown-item" href="{% url 'favorite_movies' %}">Мої улюблені</a>
+            <li><hr class="dropdown-divider"></li>
+
     <a class="dropdown-item" href="{% url 'logout' %}">Вийти</a>
   </div>
 </div>

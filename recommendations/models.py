@@ -33,3 +33,12 @@ class Review(models.Model):
 
     def __str__(self):
         return f"Review by {self.user.username} on {self.movie.title}"
+    
+
+class Favorite(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='favorites')
+    movie = models.ForeignKey('Movie', on_delete=models.CASCADE, related_name='favorited_by')
+    added_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('user', 'movie')  # Унікальність: кожен користувач може додати фільм тільки один раз

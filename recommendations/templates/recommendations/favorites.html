@@ -1,0 +1,27 @@
+{% extends 'recommendations/base.html' %}
+
+{% block title %}
+Про фільм
+{% endblock %}
+
+{% block content %}
+
+
+<h2>Улюблені фільми</h2>
+<div class="row row-cols-1 row-cols-md-4 mb-3 text-center">
+    {% for favorite in favorites %}
+        <div class="col-auto mb-4">
+            <img src="{{ favorite.movie.image.url }}" alt="{{ favorite.movie.title }}" class="card-img-top" style="width: 300px; height: 400px; object-fit: cover;">
+            <div class="py-2" style="font-size: 18px;">
+                <a href="{% url 'movie_detail' favorite.movie.id %}" class="text-decoration-none text-dark">{{ favorite.movie.title }}</a>
+            </div>
+        </div>
+    {% empty %}
+        <p>У вас немає улюблених фільмів.</p>
+    {% endfor %}
+</div>
+
+
+
+
+{% endblock %}

@@ -17,5 +17,7 @@ urlpatterns = [
     path('logout', views.logout_view, name='logout'),
     path('loginform', views.loginform, name='loginform'),
     path('registerform', views.registerform, name='registerform'),
+    path('movies/<int:movie_id>/toggle_favorite/', views.toggle_favorite, name='toggle_favorite'),
+    path('favorites/', views.favorite_movies, name='favorite_movies'),
 
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

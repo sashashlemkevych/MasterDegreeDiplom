@@ -120,6 +120,52 @@
         
         <hr>
 
+        <button id="favorite-btn" class="btn {% if is_favorite %}btn-danger{% else %}btn-primary{% endif %}" data-movie-id="{{ movie.id }}">
+            {% if is_favorite %}
+                Видалити з улюблених
+            {% else %}
+                Додати до улюблених
+            {% endif %}
+        </button>
+        
+        <script>
+        document.getElementById('favorite-btn').addEventListener('click', function() {
+            const movieId = this.getAttribute('data-movie-id');
+            fetch(`/movies/${movieId}/toggle_favorite/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    if (this.classList.contains('btn-primary')) {
+                        this.classList.remove('btn-primary');
+                        this.classList.add('btn-danger');
+                        this.textContent = 'Видалити з улюблених';
+                    } else {
+                        this.classList.remove('btn-danger');
+                        this.classList.add('btn-outline-primary');
+                        this.textContent = 'Додати до улюблених';
+                    }
+                    alert(data.message);
+                } else {
+                    alert(data.message);
+                }
+            });
+        });
+        </script>
+        
+
+
+
+        <hr>
+
+
+        
+
         <!-- Відображення відгуків -->
         <div class="container mt-4">
             <h3>Відгуки:</h3>

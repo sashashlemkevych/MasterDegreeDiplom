@@ -7,7 +7,7 @@ from django.contrib.auth.hashers import make_password # type: ignore
 # recommendations/views.py
 
 
-from .models import Movie, Rating, Review
+from .models import Movie, Rating, Review, Favorite
 from .forms import RegisterForm
 import joblib
 from django.http import JsonResponse # type: ignore
@@ -127,6 +127,14 @@ from .models import Movie, Rating, Review
 def movie_detail(request, movie_id):
     movie = get_object_or_404(Movie, id=movie_id)
     
+
+# Перевірка, чи фільм у списку улюблених
+    is_favorite = False
+    if request.user.is_authenticated:
+        is_favorite = Favorite.objects.filter(user=request.user, movie=movie).exists()
+    
+
+
     # Перевірка наявності рейтингу тільки для авторизованих користувачів
     current_rating = None
     if request.user.is_authenticated:
@@ -193,29 +201,39 @@ def movie_detail(request, movie_id):
         'current_rating': current_rating,
         'average_rating': average_rating,
         'star_range': star_range,
+        'is_favorite': is_favorite,
         'reviews': reviews_with_ratings,  # Передаємо відгуки разом із рейтингами
     })
 
 
 
-
-# @user_passes_test(lambda u: u.is_staff)
 def delete_review(request, review_id):
     review = get_object_or_404(Review, id=review_id)
     review.delete()
     return redirect('movie_detail', movie_id=review.movie.id)
 
-# def delete_review(request, review_id):
-#     review = get_object_or_404(Review, id=review_id)
 
-#     # Дозволити видаляти тільки автору відгуку або адміністратору
-#     if request.user == review.user or request.user.is_staff:
-#         review.delete()
-#         messages.success(request, 'Відгук успішно видалено.')
-#     else:
-#         return HttpResponseForbidden('Ви не маєте права видаляти цей відгук.')
+def favorite_movies(request):
+    if not request.user.is_authenticated:
+        return redirect('login')  # Перенаправити неавторизованих користувачів на сторінку входу
+    
+    favorites = Favorite.objects.filter(user=request.user).select_related('movie')
+    return render(request, 'recommendations/favorites.html', {'favorites': favorites})
 
-#     return redirect('movie_detail', movie_id=review.movie.id)
+
+
+def toggle_favorite(request, movie_id):
+    if not request.user.is_authenticated:
+        return JsonResponse({'success': False, 'message': 'Ви повинні увійти, щоб додати до улюблених.'}, status=401)
+
+    movie = get_object_or_404(Movie, id=movie_id)
+    favorite, created = Favorite.objects.get_or_create(user=request.user, movie=movie)
+
+    if created:
+        return JsonResponse({'success': True, 'message': 'Фільм додано до улюблених.'})
+    else:
+        favorite.delete()
+        return JsonResponse({'success': True, 'message': 'Фільм видалено з улюблених.'})
 
 
 
